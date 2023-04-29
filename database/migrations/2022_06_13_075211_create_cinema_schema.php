@@ -34,9 +34,108 @@ class CreateCinemaSchema extends Migration
      * As a user I want to know where I'm sitting on my ticket
      * As a cinema owner I dont want to configure the seating for every show
      */
+    // public function up()
+    // {
+    //     throw new \Exception('implement in coding task 4, you can ignore this exception if you are just running the initial migrations.');
+    // }
+
     public function up()
     {
-        throw new \Exception('implement in coding task 4, you can ignore this exception if you are just running the initial migrations.');
+        // Create Movies table
+        Schema::create('movies', function (Blueprint $table) {
+            $table->id('movie_id');
+            $table->string('title');
+            $table->text('description');
+            $table->integer('duration');
+            $table->string('thumbnail');
+            $table->timestamps();
+        });
+        // Create Cinemas table
+        Schema::create('cinemas', function (Blueprint $table) {
+            $table->id('cinema_id');
+            $table->string('cinema_name');
+            $table->integer('owner_id');
+            $table->foreign('owner_id')->references('owner_id')->on('owners');
+            $table->timestamps();
+        });
+
+        // Create Cinema Rooms table
+        Schema::create('cinema_rooms', function (Blueprint $table) {
+            $table->id('cinema_room_id');
+            $table->string('room_name');
+            $table->integer('capacity');
+            $table->integer('cinema_id');
+            $table->foreign('cinema_id')->references('cinema_id')->on('cinemas');
+            $table->timestamps();
+        });
+
+        // Create Shows table
+        Schema::create('shows', function (Blueprint $table) {
+            $table->id('show_id');
+            $table->dateTime('show_time');
+            $table->integer('movie_id');
+            $table->foreign('movie_id')->references('movie_id')->on('movies');
+            $table->integer('cinema_room_id');
+            $table->foreign('cinema_room_id')->references('cinema_room_id')->on('cinema_rooms');
+            $table->timestamps();
+        });
+
+        // Create Owners table
+        Schema::create('owners', function (Blueprint $table) {
+            $table->id('owner_id');
+            $table->string('owner_name');
+            $table->string('email');
+            $table->string('phone');
+            $table->timestamps();
+        });
+
+        // Create Pricing table
+        Schema::create('pricing', function (Blueprint $table) {
+            $table->id('pricing_id');
+            $table->integer('show_id');
+            $table->foreign('show_id')->references('show_id')->on('shows');
+            $table->float('price');
+            $table->timestamps();
+        });
+
+        // Create Seat Types table
+        Schema::create('seat_types', function (Blueprint $table) {
+            $table->id('seat_type_id');
+            $table->string('seat_type_name');
+            $table->timestamps();
+        });
+
+        // Create Seats table
+        Schema::create('seats', function (Blueprint $table) {
+            $table->id('seat_id');
+            $table->integer('seat_number');
+            $table->integer('seat_type_id');
+            $table->foreign('seat_type_id')->references('seat_type_id')->on('seat_types');
+            $table->integer('cinema_room_id');
+            $table->foreign('cinema_room_id')->references('cinema_room_id')->on('cinema_rooms');
+            $table->timestamps();
+        });
+        // Create Users table
+        Schema::create('users', function (Blueprint $table) {
+            $table->id('user_id');
+            $table->string('user_name');
+            $table->string('email');
+            $table->string('password');
+            $table->timestamps();
+        });
+
+        // Create Bookings table
+        Schema::create('bookings', function (Blueprint $table) {
+            $table->id('booking_id');
+            $table->dateTime('booking_time');
+            $table->integer('user_id');
+            $table->foreign('user_id')->references('user_id')->on('users');
+            $table->integer('show_id');
+            $table->foreign('show_id')->references('show_id')->on('shows');
+            $table->integer('seat_id');
+            $table->foreign('seat_id')->references('seat_id')->on('seats');
+            $table->timestamps();
+        });
     }
 
     /**
