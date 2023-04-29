@@ -92,7 +92,63 @@ class MenuController extends BaseController
     ]
      */
 
-    public function getMenuItems() {
-        throw new \Exception('implement in coding task 3');
+    // public function getMenuItems() {
+    //     throw new \Exception('implement in coding task 3');
+    // }
+
+    public function getMenuItems()
+    {
+        // $menuItems = MenuItem::get()->toArray();
+        $menuItems = MenuItem::orderBy('parent_id', 'asc')->get()->toArray();
+
+        // Recursively adding child menu items to their parent
+        $allMenuItems = $this->buildSubMenu($menuItems, null);
+
+        return $allMenuItems;
     }
+
+    private function buildSubMenussss(&$menuItems, $parentId)
+    {
+        $branch = [];
+
+        foreach ($menuItems as &$menuItem) {
+            if ($menuItem['parent_id'] == $parentId) {
+                $children = $this->buildSubMenu($menuItems, $menuItem['id']);
+                if ($children) {
+                    $menuItem['children'] = $children;
+                }
+                $branch[$menuItem['id']] = $menuItem;
+                unset($menuItem);
+            }
+        }
+
+        return $branch;
+    }
+
+    private function buildSubMenu($menuItems, $parentId)
+    {
+        $branch = [];
+
+        // Loop through each menu item
+        foreach ($menuItems as $menuItem) {
+            // If the parent ID matches the given ID, add the menu item to the branch
+            if ($menuItem['parent_id'] == $parentId) {
+                // Recursively add child menu items to their parent
+                $children = $this->buildSubMenu($menuItems, $menuItem['id']);
+                if (!empty($children)) {
+                    $menuItem['children'] = $children;
+                }
+                $branch[$menuItem['id']] = $menuItem;
+            }
+        }
+
+        return $branch;
+    }
+
+
+
+
+
+
+
 }
