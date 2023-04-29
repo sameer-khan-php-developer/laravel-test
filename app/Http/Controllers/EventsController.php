@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Foundation\Bus\DispatchesJobs;
+use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class EventsController extends BaseController
 {
@@ -100,8 +102,48 @@ class EventsController extends BaseController
     ]
      */
 
-    public function getEventsWithWorkshops() {
-        throw new \Exception('implement in coding task 1');
+    // public function getEventsWithWorkshops() {
+    //     throw new \Exception('implement in coding task 1');
+    // }
+    public function getEventsWithWorkshops()
+    {
+        $events = DB::table('events')
+            ->leftJoin('workshops', 'events.id', '=', 'workshops.event_id')
+            ->select('events.id as event_id','events.name as event_name','events.created_at as event_created_at','events.updated_at as event_updated_at',
+                'workshops.id as workshop_id','workshops.start as workshop_start','workshops.end as workshop_end','workshops.name as workshop_name','workshops.created_at as workshop_created_at','workshops.updated_at as workshop_updated_at'
+            )
+            ->get();
+
+        $eventsWithWorkshops = [];
+
+        foreach ($events as $event) {
+            if (!isset($eventsWithWorkshops[$event->event_id])) {
+
+                // If event is not present in the eventsWithWorkshops array we add the that event with empty workshops array
+                $eventsWithWorkshops[$event->event_id] = [
+                    'id' => $event->event_id,
+                    'name' => $event->event_name,
+                    'created_at' => $event->event_created_at,
+                    'updated_at' => $event->event_updated_at,
+                    'workshops' => []
+                ];
+            }
+
+            // Then we check if the event have workshops so we add it 
+            if ($event->workshop_id) {
+                $eventsWithWorkshops[$event->event_id]['workshops'][] = [
+                    'id' => $event->workshop_id,
+                    'start' => $event->workshop_start,
+                    'end' => $event->workshop_end,
+                    'name' => $event->workshop_name,
+                    'created_at' => $event->workshop_created_at,
+                    'updated_at' => $event->workshop_updated_at
+                ];
+            }
+        }
+
+        // return $eventsWithWorkshops;
+        return array_values($eventsWithWorkshops);
     }
 
 
@@ -178,7 +220,53 @@ class EventsController extends BaseController
     ```
      */
 
-    public function getFutureEventsWithWorkshops() {
-        throw new \Exception('implement in coding task 2');
+    // public function getFutureEventsWithWorkshops() {
+    //     throw new \Exception('implement in coding task 2');
+    // }
+
+
+    public function getFutureEventsWithWorkshops()
+    {
+        // Get all events with workshops whose start time if greater than current time to get future workshops
+        $events = DB::table('events')
+            // ->join('workshops', 'events.id', '=', 'workshops.event_id')
+            ->where('workshops.start', '>', Carbon::now())
+            ->leftJoin('workshops', 'events.id', '=', 'workshops.event_id')
+            ->select('events.id as event_id','events.name as event_name','events.created_at as event_created_at','events.updated_at as event_updated_at',
+                'workshops.id as workshop_id','workshops.start as workshop_start','workshops.end as workshop_end','workshops.name as workshop_name','workshops.created_at as workshop_created_at','workshops.updated_at as workshop_updated_at'
+            )
+            ->orderBy('workshops.start')
+            ->get();
+
+        $eventsWithWorkshops = [];
+
+        foreach ($events as $event) {
+            // If event is not present in the eventsWithWorkshops array we add the that event with empty workshops array
+            if (!isset($eventsWithWorkshops[$event->event_id])) {
+                $eventsWithWorkshops[$event->event_id] = [
+                    'id' => $event->event_id,
+                    'name' => $event->event_name,
+                    'created_at' => $event->event_created_at,
+                    'updated_at' => $event->event_updated_at,
+                    'workshops' => []
+                ];
+            }
+
+            // Then we check if the event have workshops so we add it 
+            if ($event->workshop_id) {
+                $eventsWithWorkshops[$event->event_id]['workshops'][] = [
+                    'id' => $event->workshop_id,
+                    'start' => $event->workshop_start,
+                    'end' => $event->workshop_end,
+                    'name' => $event->workshop_name,
+                    'created_at' => $event->workshop_created_at,
+                    'updated_at' => $event->workshop_updated_at
+                ];
+            }
+        }
+
+        // Return the events and workshops array
+        return array_values($eventsWithWorkshops);
     }
+
 }
